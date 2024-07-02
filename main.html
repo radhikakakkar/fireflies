@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      Fireflies🧚🏻 | Convert spotify playlist to apple music playlist
+    </title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <header class="bg-primary text-white p-2">
+      <div class="container">
+        <h1>Fireflies🧚🏻</h1>
+      </div>
+    </header>
+
+    <div class="container mt-5">
+      <form id="submitNewUserForm">
+        <div id="spotifyPlaylistIdDiv" class="form-group">
+          <label for="userEmailId">Enter Your Email: </label>
+          <input
+            type="text"
+            class="form-control"
+            id="userEmailId"
+            placeholder="Enter Your Email"
+          />
+        </div>
+        <div id="spotifyPlaylistIdDiv" class="form-group">
+          <label for="spotifyPlaylistId">Spotify Playlist ID:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="spotifyPlaylistId"
+            placeholder="Enter Spotify Playlist ID"
+          />
+        </div>
+        <button id="submitNewUser" class="btn btn-primary">Submit</button>
+      </form>
+
+      <button
+        class="btn btn-info mt-3"
+        id="toggleBtn"
+        type="button"
+        data-toggle="collapse"
+        data-target="#resultsCollapse"
+        aria-expanded="True"
+        aria-controls="resultsCollapse"
+        style="display: none"
+      >
+        Show Results
+      </button>
+
+      <div id="resultsCollapse" class="collapse mt-3">
+        <p id="results" style="display: none" class="alert alert-info">
+          Results
+        </p>
+      </div>
+
+      <form id="appleMusicForm" style="margin-top: 10%; display: none">
+        <div class="form-group">
+          <label for="appleMusicAuthToken">Apple Music Auth Token:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="appleMusicAuthToken"
+            placeholder="Enter Apple Music Auth Token"
+          />
+        </div>
+        <div class="form-group">
+          <label for="appleMusicMediaUserToken"
+            >Apple Music Media User Token:</label
+          >
+          <input
+            type="text"
+            class="form-control"
+            id="appleMusicMediaUserToken"
+            placeholder="Enter Apple Music Media User Token"
+          />
+        </div>
+        <div class="form-group">
+          <label for="newPlaylistName">New Playlist Name:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="newPlaylistName"
+            placeholder="Enter New Playlist Name"
+          />
+        </div>
+        <button id="createAppleMusicPlaylist" class="btn btn-primary">
+          Create Playlist
+        </button>
+      </form>
+      <div style="margin-top: 10%" id="finalResult">
+        <p
+          id="finalResultP"
+          style="color: green; font-weight: bold; display: none"
+        ></p>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+      // sending fetch request for new user
+      document
+        .getElementById("submitNewUser")
+        .addEventListener("click", function (e) {
+          e.preventDefault();
+
+          const spotifyPlaylistId =
+            document.getElementById("spotifyPlaylistId").value;
+          const userEmailId = document.getElementById("userEmailId").value;
+          const encodedUserEmail = encodeURIComponent(userEmailId);
+          const encodedPlaylistId = encodeURIComponent(spotifyPlaylistId);
+
+          if (!spotifyPlaylistId || !userEmailId) {
+            alert("Please fill in both the playlist ID and the email.");
+            return;
+          }
+          const requestOptions = {
+            method: "GET",
+            redirect: "follow",
+          };
+
+          fetch(
+            `http://127.0.0.1:8000/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`,
+            requestOptions
+          )
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(
+                  "Network response was not ok " + response.statusText
+                );
+              }
+              return response.json();
+            })
+            .then((data) => {
+              const resultsElement = document.getElementById("results");
+              resultsElement.textContent = ""; // Clear previous content
+
+              const listElement = document.createElement("ul"); // Create a list element
+
+              data.forEach((item) => {
+                const listItem = document.createElement("li"); // Create a list item
+                listItem.textContent = item; // Set the text content of the list item
+                listElement.appendChild(listItem); // Append the list item to the list element
+              });
+
+              resultsElement.appendChild(listElement); // Append the list element to the results element
+              resultsElement.style.display = "block"; // Make the results element visible
+              document.getElementById("toggleBtn").style.display = "block"; // Make the results element visible
+              document.getElementById("appleMusicForm").style.display = "block"; // Make the results element visible
+            })
+            .catch((error) =>
+              console.error(
+                "There has been a problem with your fetch operation:",
+                error
+              )
+            );
+        });
+
+      // store user_email in local storage for playlist creation request
+
+      // sending fetch request for creating new playlist on apple music
+      document
+        .getElementById("createAppleMusicPlaylist")
+        .addEventListener("click", function (e) {
+          e.preventDefault();
+          const appleMusicAuthToken = document.getElementById(
+            "appleMusicAuthToken"
+          ).value;
+          const appleMusicMediaUserToken = document.getElementById(
+            "appleMusicMediaUserToken"
+          ).value;
+          const newPlaylistName =
+            document.getElementById("newPlaylistName").value;
+
+          if (
+            !appleMusicAuthToken ||
+            !appleMusicMediaUserToken ||
+            !newPlaylistName
+          ) {
+            alert("Please fill in all the fields.");
+            return;
+          }
+          const requestData = {
+            user_email: "rads@gmail.com",
+            apple_music_auth_token: appleMusicAuthToken,
+            apple_music_media_token: appleMusicMediaUserToken,
+            new_playlist_name: newPlaylistName,
+          };
+          const requestOptions = {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            redirect: "follow",
+            body: JSON.stringify(requestData),
+          };
+
+          fetch(
+            "http://127.0.0.1:8000/create-apple-music-playlist",
+            requestOptions
+          )
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(
+                  "Network response was not ok " + response.statusText
+                );
+              }
+              return response.json();
+            })
+            .then((data) => {
+              console.log("done");
+              document.getElementById("finalResultP").textContent = data;
+              document.getElementById("finalResultP").style.display = "block";
+            })
+            .catch((error) =>
+              console.error(
+                "There has been a problem with your fetch operation:",
+                error
+              )
+            );
+        });
+    </script>
+  </body>
+</html>
