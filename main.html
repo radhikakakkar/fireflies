@@ -129,7 +129,7 @@
           };
 
           fetch(
-            `http://127.0.0.1:8000/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`,
+            `https://fireflies-0rmt.onrender.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`,
             requestOptions
           )
             .then((response) => {
@@ -141,21 +141,22 @@
               return response.json();
             })
             .then((data) => {
+              localStorage.setItem("user_email", userEmailId);
               const resultsElement = document.getElementById("results");
-              resultsElement.textContent = ""; // Clear previous content
+              resultsElement.textContent = "";
 
-              const listElement = document.createElement("ul"); // Create a list element
+              const listElement = document.createElement("ul");
 
               data.forEach((item) => {
-                const listItem = document.createElement("li"); // Create a list item
-                listItem.textContent = item; // Set the text content of the list item
-                listElement.appendChild(listItem); // Append the list item to the list element
+                const listItem = document.createElement("li");
+                listItem.textContent = item;
+                listElement.appendChild(listItem);
               });
 
-              resultsElement.appendChild(listElement); // Append the list element to the results element
-              resultsElement.style.display = "block"; // Make the results element visible
-              document.getElementById("toggleBtn").style.display = "block"; // Make the results element visible
-              document.getElementById("appleMusicForm").style.display = "block"; // Make the results element visible
+              resultsElement.appendChild(listElement);
+              resultsElement.style.display = "block";
+              document.getElementById("toggleBtn").style.display = "block";
+              document.getElementById("appleMusicForm").style.display = "block";
             })
             .catch((error) =>
               console.error(
@@ -189,8 +190,10 @@
             alert("Please fill in all the fields.");
             return;
           }
+          user_email_id = localStorage.getItem("user_email");
+          console.log(user_email_id);
           const requestData = {
-            user_email: "rads@gmail.com",
+            user_email: user_email_id,
             apple_music_auth_token: appleMusicAuthToken,
             apple_music_media_token: appleMusicMediaUserToken,
             new_playlist_name: newPlaylistName,
@@ -205,7 +208,7 @@
           };
 
           fetch(
-            "http://127.0.0.1:8000/create-apple-music-playlist",
+            "https://fireflies-0rmt.onrender.com/create-apple-music-playlist",
             requestOptions
           )
             .then((response) => {
