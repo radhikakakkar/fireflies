@@ -14,13 +14,48 @@
       href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
       rel="stylesheet"
     />
+    <style>
+      /* Loader styles */
+      .loader {
+        border: 2px solid #f3f3f3; /* Light grey */
+        border-top: 2px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 12px;
+        height: 12px;
+        animation: spin 2s linear infinite;
+        display: inline-block;
+      }
+  
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
     <header class="bg-primary text-white p-2">
       <div class="container">
         <h1>Fireflies🧚🏻</h1>
       </div>
-    </header>
+    </header> 
+
+    <div style="margin: 1%" id="finalResult">
+      <div
+        id="finalResultAlert"
+        class="alert alert-dismissible fade show"
+        role="alert"
+        style="display: none"
+      >
+        <p id="finalResultP" style="font-weight: bold;"></p>
+        <!-- <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button> -->
+      </div>
+    </div>
+    
 
     <div class="container mt-5">
       <form id="submitNewUserForm">
@@ -64,7 +99,7 @@
         </p>
       </div>
 
-      <form id="appleMusicForm" style="margin-top: 10%; display: none">
+      <form id="appleMusicForm" style="margin-top: 3%; margin-bottom: 10%; display: none">
         <div class="form-group">
           <label for="appleMusicAuthToken">Apple Music Auth Token:</label>
           <input
@@ -74,6 +109,7 @@
             placeholder="Enter Apple Music Auth Token"
           />
         </div>
+
         <div class="form-group">
           <label for="appleMusicMediaUserToken"
             >Apple Music Media User Token:</label
@@ -84,7 +120,32 @@
             id="appleMusicMediaUserToken"
             placeholder="Enter Apple Music Media User Token"
           />
+          <span style="font-size: 10px; color: blue">
+            Don't know how to get these tokens?
+            <button
+              style="
+                font-size: 10px; 
+                color: blue; 
+                background: transparent; 
+                border: none; 
+                padding: 0; 
+                margin: 0; 
+                cursor: pointer;
+              "
+              id="toggleBtn"
+              type="button"
+              data-toggle="collapse"
+              data-target="#get-apple-music-tokens-guide"
+              aria-expanded="true"
+              aria-controls="get-apple-music-tokens-guide"
+              onclick="toggleGuide()"
+            >
+              Click here
+            </button>
+          </span>
         </div>
+        
+        </span>
         <div class="form-group">
           <label for="newPlaylistName">New Playlist Name:</label>
           <input
@@ -97,13 +158,37 @@
         <button id="createAppleMusicPlaylist" class="btn btn-primary">
           Create Playlist
         </button>
+       
       </form>
-      <div style="margin-top: 10%" id="finalResult">
-        <p
-          id="finalResultP"
-          style="color: green; font-weight: bold; display: none"
-        ></p>
+
+      <div id="get-apple-music-tokens-guide" class="collapse mt-3" style="border: 1px solid #ccc; padding: 15px; background-color: #f9f9f9; border-radius: 5px;">
+        <p style="font-weight: bold;">Here is the guide</p>
+        <ol style="margin-left: 20px; padding-left: 0;">
+          <li style="margin-bottom: 10px;">
+            Login to Apple Music in a browser.
+          </li>
+          <li style="margin-bottom: 10px;">
+            Open Dev Tools and switch to the Network Tab. Select Fetch/XHR filter.
+            (Just do a cmd/ctrl+shift+c, the dev tools will open)
+          </li>
+          <li style="margin-bottom: 10px;">
+            Click on the Recently Added section in the side navbar.
+          </li>
+          <li style="margin-bottom: 10px;">
+            From the request headers, copy and keep the values of these keys for future use:
+            <ul style="margin-top: 10px; padding-left: 20px; list-style-type: disc;">
+              <li style="margin-bottom: 5px;">
+                Authorization (Copy the code after the word Bearer, excluding the space)
+              </li>
+              <li>
+                Media-user-token
+              </li>
+            </ul>
+          </li>
+        </ol>
+        <img src="apple_tokens_image.png" alt="Apple Music Tokens Guide Image" style="max-width: 100%; border: 1px solid #ccc; border-radius: 5px; margin-top: 15px;" />
       </div>
+      
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -112,129 +197,157 @@
 
     <script>
       // sending fetch request for new user
-      document
-        .getElementById("submitNewUser")
-        .addEventListener("click", function (e) {
-          e.preventDefault();
+      document.getElementById("submitNewUser").addEventListener("click", function (e) {
+        e.preventDefault();
 
-          const spotifyPlaylistId =
-            document.getElementById("spotifyPlaylistId").value;
-          const userEmailId = document.getElementById("userEmailId").value;
-          const encodedUserEmail = encodeURIComponent(userEmailId);
-          const encodedPlaylistId = encodeURIComponent(spotifyPlaylistId);
+        const spotifyPlaylistId = document.getElementById("spotifyPlaylistId").value;
+        const userEmailId = document.getElementById("userEmailId").value;
+        const encodedUserEmail = encodeURIComponent(userEmailId);
+        const encodedPlaylistId = encodeURIComponent(spotifyPlaylistId);
+        const submitButton = document.getElementById("submitNewUser");
 
-          if (!spotifyPlaylistId || !userEmailId) {
-            alert("Please fill in both the playlist ID and the email.");
-            return;
-          }
-          const requestOptions = {
-            method: "GET",
-            redirect: "follow",
-          };
+        if (!spotifyPlaylistId || !userEmailId) {
+          alert("Please fill in both the playlist ID and the email.");
+          return;
+        }
 
-          fetch(
-            `https://fireflies-0rmt.onrender.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`,
-            requestOptions
-          )
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error(
-                  "Network response was not ok " + response.statusText
-                );
-              }
-              return response.json();
-            })
-            .then((data) => {
-              localStorage.setItem("user_email", userEmailId);
-              const resultsElement = document.getElementById("results");
-              resultsElement.textContent = "";
+        // Show loader
+        submitButton.innerHTML = '<div class="loader"></div>';
 
-              const listElement = document.createElement("ul");
+        const requestOptions = {
+          method: "GET",
+          redirect: "follow",
+        };
 
-              data.forEach((item) => {
-                const listItem = document.createElement("li");
-                listItem.textContent = item;
-                listElement.appendChild(listItem);
-              });
+        fetch(
+          `https://fireflies-0rmt.onrender.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`,
+          requestOptions
+        )
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                "Network response was not ok " + response.statusText
+              );
+            }
+            return response.json();
+          })
+          .then((data) => {
+            localStorage.setItem("user_email", userEmailId);
+            const resultsElement = document.getElementById("results");
+            resultsElement.textContent = "";
 
-              resultsElement.appendChild(listElement);
-              resultsElement.style.display = "block";
-              document.getElementById("toggleBtn").style.display = "block";
-              document.getElementById("appleMusicForm").style.display = "block";
-            })
-            .catch((error) =>
-              console.error(
-                "There has been a problem with your fetch operation:",
-                error
-              )
+            const listElement = document.createElement("ul");
+
+            data.forEach((item) => {
+              const listItem = document.createElement("li");
+              listItem.textContent = item;
+              listElement.appendChild(listItem);
+            });
+
+            resultsElement.appendChild(listElement);
+            resultsElement.style.display = "block";
+            document.getElementById("toggleBtn").style.display = "block";
+            document.getElementById("appleMusicForm").style.display = "block";
+          })
+          .catch((error) => {
+            console.error(
+              "There has been a problem with your fetch operation:",
+              error
             );
-        });
+          })
+          .finally(() => {
+            submitButton.innerHTML = 'Submit';
+          });
+    });
 
       // store user_email in local storage for playlist creation request
 
       // sending fetch request for creating new playlist on apple music
-      document
-        .getElementById("createAppleMusicPlaylist")
-        .addEventListener("click", function (e) {
-          e.preventDefault();
-          const appleMusicAuthToken = document.getElementById(
-            "appleMusicAuthToken"
-          ).value;
-          const appleMusicMediaUserToken = document.getElementById(
-            "appleMusicMediaUserToken"
-          ).value;
-          const newPlaylistName =
-            document.getElementById("newPlaylistName").value;
+      document.getElementById("createAppleMusicPlaylist").addEventListener("click", function (e) {
+      e.preventDefault();
+      const appleMusicAuthToken = document.getElementById("appleMusicAuthToken").value;
+      const appleMusicMediaUserToken = document.getElementById("appleMusicMediaUserToken").value;
+      const newPlaylistName = document.getElementById("newPlaylistName").value;
+      const createButton = document.getElementById("createAppleMusicPlaylist");
 
-          if (
-            !appleMusicAuthToken ||
-            !appleMusicMediaUserToken ||
-            !newPlaylistName
-          ) {
-            alert("Please fill in all the fields.");
-            return;
-          }
-          user_email_id = localStorage.getItem("user_email");
-          console.log(user_email_id);
-          const requestData = {
-            user_email: user_email_id,
-            apple_music_auth_token: appleMusicAuthToken,
-            apple_music_media_token: appleMusicMediaUserToken,
-            new_playlist_name: newPlaylistName,
-          };
-          const requestOptions = {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            redirect: "follow",
-            body: JSON.stringify(requestData),
-          };
+      if (!appleMusicAuthToken || !appleMusicMediaUserToken || !newPlaylistName) {
+        alert("Please fill in all the fields.");
+        return;
+      }
 
-          fetch(
-            "https://fireflies-0rmt.onrender.com/create-apple-music-playlist",
-            requestOptions
-          )
-            .then((response) => {
-              if (!response.ok) {
-                throw new Error(
-                  "Network response was not ok " + response.statusText
-                );
-              }
-              return response.json();
-            })
-            .then((data) => {
-              console.log("done");
-              document.getElementById("finalResultP").textContent = data;
-              document.getElementById("finalResultP").style.display = "block";
-            })
-            .catch((error) =>
-              console.error(
-                "There has been a problem with your fetch operation:",
-                error
-              )
-            );
-        });
+      // Show loader
+      createButton.innerHTML = '<div class="loader"></div>';
+
+      user_email_id = localStorage.getItem("user_email");
+      const requestData = {
+        user_email: user_email_id,
+        apple_music_auth_token: appleMusicAuthToken,
+        apple_music_media_token: appleMusicMediaUserToken,
+        new_playlist_name: newPlaylistName,
+      };
+      const requestOptions = {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        redirect: "follow",
+        body: JSON.stringify(requestData),
+      };
+
+      fetch(
+        "https://fireflies-0rmt.onrender.com/create-apple-music-playlist",
+        requestOptions
+      )
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok " + response.statusText);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        const alertElement = document.getElementById("finalResultAlert");
+        const alertMessage = document.getElementById("finalResultP");
+        
+        alertMessage.textContent = data;
+        
+        if (data.includes("succesfully")) {
+          alertElement.classList.remove("alert-danger");
+          alertElement.classList.add("alert-success");
+        } else {
+          alertElement.classList.remove("alert-success");
+          alertElement.classList.add("alert-danger");
+        }
+        
+        alertElement.style.display = "block";
+      })
+      .catch((error) => {
+        console.error("There has been a problem with your fetch operation:", error);
+      })
+      .finally(() => {
+        createButton.innerHTML = 'Create Playlist';
+      });
+    });
+
+    function scrollToGuide() {
+    var element = document.getElementById("get-apple-music-tokens-guide");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function toggleGuide() {
+    var guide = document.getElementById("get-apple-music-tokens-guide");
+    var button = document.getElementById("toggleBtn");
+
+    if (guide.style.display === "none" || guide.style.display === "") {
+      guide.style.display = "block";
+      button.setAttribute("aria-expanded", "true");
+      guide.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      guide.style.display = "none";
+      button.setAttribute("aria-expanded", "false");
+    }
+  }
     </script>
   </body>
 </html>
