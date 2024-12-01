@@ -59,8 +59,8 @@
 
     <div class="container mt-5">
       <form id="submitNewUserForm">
-        <div id="spotifyPlaylistIdDiv" class="form-group">
-          <label for="userEmailId">Enter Your Email: </label>
+        <div class="form-group">
+          <label for="userEmailId">Enter Your Email:</label>
           <input
             type="text"
             class="form-control"
@@ -68,7 +68,23 @@
             placeholder="Enter Your Email"
           />
         </div>
-        <div id="spotifyPlaylistIdDiv" class="form-group">
+      
+        <!-- Option 1: Create Playlist from Liked Songs -->
+        <div id="likedSongsOption" class="form-group mt-4">
+          <h5>Option 1: Create a Playlist from Liked Songs</h5>
+          <button
+            id="makePlaylistButton"
+            class="btn btn-success mt-2"
+            style="width: 100%;"
+            type="button"
+          >
+            Make Playlist of Liked Songs
+          </button>
+        </div>
+      
+        <!-- Option 2: Enter Playlist ID -->
+        <div id="spotifyPlaylistOption" class="form-group mt-4">
+          <h5>Option 2: Enter a Spotify Playlist ID</h5>
           <label for="spotifyPlaylistId">Spotify Playlist ID:</label>
           <input
             type="text"
@@ -76,9 +92,17 @@
             id="spotifyPlaylistId"
             placeholder="Enter Spotify Playlist ID"
           />
+          <button
+            id="submitPlaylistId"
+            class="btn btn-primary mt-2"
+            style="width: 100%;"
+            type="submit"
+          >
+            Submit Playlist ID
+          </button>
         </div>
-        <button id="submitNewUser" class="btn btn-primary">Submit</button>
       </form>
+      
 
       <button
         class="btn btn-info mt-3"
@@ -197,14 +221,14 @@
 
     <script>
       // sending fetch request for new user
-      document.getElementById("submitNewUser").addEventListener("click", function (e) {
+      document.getElementById("submitPlaylistId").addEventListener("click", function (e) {
         e.preventDefault();
 
         const spotifyPlaylistId = document.getElementById("spotifyPlaylistId").value;
         const userEmailId = document.getElementById("userEmailId").value;
         const encodedUserEmail = encodeURIComponent(userEmailId);
         const encodedPlaylistId = encodeURIComponent(spotifyPlaylistId);
-        const submitButton = document.getElementById("submitNewUser");
+        const submitButton = document.getElementById("submitPlaylistId");
 
         if (!spotifyPlaylistId || !userEmailId) {
           alert("Please fill in both the playlist ID and the email.");
@@ -220,10 +244,10 @@
         };
 
         fetch(
-          `https://fireflies.radioactive11.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // Domain 
+          // `https://fireflies.radioactive11.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // Domain 
           //`https://13.60.179.94/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // AWS 
           // `https://fireflies-0rmt.onrender.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, //render
-          // `http://127.0.0.1:8000/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`,
+          `http://127.0.0.1:8000/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`,
           requestOptions
         )
           .then((response) => {
@@ -262,11 +286,80 @@
             submitButton.innerHTML = 'Submit';
           });
     });
+      
+    //creating playlist from liked songs
+      document.getElementById("makePlaylistButton").addEventListener("click", function (e) {
+        e.preventDefault();
 
+        
+        const userEmailId = document.getElementById("userEmailId").value;
+        const encodedUserEmail = encodeURIComponent(userEmailId);
+        const makePlaylistButton = document.getElementById("makePlaylistButton");
+        const submitButton = document.getElementById("submitPlaylistId");
+
+        if (!userEmailId) {
+          alert("Please fill in the email.");
+          return;
+        }
+
+        // Show loader
+        makePlaylistButton.innerHTML = '<div class="loader"></div>';
+        submitButton.disabled = true;
+
+        const requestOptions = {
+          method: "GET",
+          redirect: "follow",
+        };
+
+        fetch(
+          // `https://fireflies.radioactive11.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // Domain 
+          //`https://13.60.179.94/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // AWS 
+          // `https://fireflies-0rmt.onrender.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, //render
+          `http://127.0.0.1:8000/get-liked-songs/${encodedUserEmail}`,
+          requestOptions
+        )
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                "Network response was not ok " + response.statusText
+              );
+            }
+            return response.json();
+          })
+          .then((data) => {
+            localStorage.setItem("user_email", userEmailId);
+            const resultsElement = document.getElementById("results");
+            resultsElement.textContent = "";
+
+            const listElement = document.createElement("ul");
+
+            data.forEach((item) => {
+              const listItem = document.createElement("li");
+              listItem.textContent = item;
+              listElement.appendChild(listItem);
+            });
+
+            resultsElement.appendChild(listElement);
+            resultsElement.style.display = "block";
+            document.getElementById("toggleBtn").style.display = "block";
+            document.getElementById("appleMusicForm").style.display = "block";
+          })
+          .catch((error) => {
+            console.error(
+              "There has been a problem with your fetch operation:",
+              error
+            );
+          })
+          .finally(() => {
+            makePlaylistButton.innerHTML = 'Make Playlist of Liked Songs';
+            submitButton.disabled = false;
+          });
+    });
+      
     async function checkTaskStatus(taskId) {
-    // const response = await fetch(`http://127.0.0.1:8000/task_status/${taskId}`);
+    const response = await fetch(`http://127.0.0.1:8000/task_status/${taskId}`);
     // const response = await fetch(`https://13.60.179.94/task_status/${taskId}`);
-    const response = await fetch(`https://fireflies.radioactive11.com/task_status/${taskId}`);
+    // const response = await fetch(`https://fireflies.radioactive11.com/task_status/${taskId}`);
     const data = await response.json();
     if(data.state === 'PENDING'){
       return 'PENDING';
@@ -290,7 +383,7 @@
       const appleMusicMediaUserToken = document.getElementById("appleMusicMediaUserToken").value;
       const newPlaylistName = document.getElementById("newPlaylistName").value;
       const createButton = document.getElementById("createAppleMusicPlaylist");
-
+      
       if (!appleMusicAuthToken || !appleMusicMediaUserToken || !newPlaylistName) {
         alert("Please fill in all the fields.");
         return;
@@ -316,10 +409,10 @@
       };
 
       fetch(
-        "https://fireflies.radioactive11.com/create-apple-music-playlist", //Domain
+        // "https://fireflies.radioactive11.com/create-apple-music-playlist", //Domain
         // "https://13.60.179.94/create-apple-music-playlist", //AWS
         // "https://fireflies-0rmt.onrender.com/create-apple-music-playlist", //render
-        // "http://127.0.0.1:8000/create-apple-music-playlist",
+        "http://127.0.0.1:8000/create-apple-music-playlist",
         requestOptions
       )
       .then((response) => {
@@ -369,6 +462,7 @@
       })
       .finally(() => {
         createButton.innerHTML = 'Create Playlist';
+
       });
     });
 
