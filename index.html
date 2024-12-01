@@ -244,10 +244,10 @@
         };
 
         fetch(
-          // `https://fireflies.radioactive11.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // Domain 
+           `https://fireflies.radioactive11.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // Domain 
           //`https://13.60.179.94/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // AWS 
           // `https://fireflies-0rmt.onrender.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, //render
-          `http://127.0.0.1:8000/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`,
+          // `http://127.0.0.1:8000/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`,
           requestOptions
         )
           .then((response) => {
@@ -312,10 +312,10 @@
         };
 
         fetch(
-          // `https://fireflies.radioactive11.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // Domain 
+           `https://fireflies.radioactive11.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // Domain 
           //`https://13.60.179.94/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, // AWS 
           // `https://fireflies-0rmt.onrender.com/get-spotify-playlist/${encodedUserEmail}/${encodedPlaylistId}`, //render
-          `http://127.0.0.1:8000/get-liked-songs/${encodedUserEmail}`,
+          // `http://127.0.0.1:8000/get-liked-songs/${encodedUserEmail}`,
           requestOptions
         )
           .then((response) => {
@@ -357,9 +357,9 @@
     });
       
     async function checkTaskStatus(taskId) {
-    const response = await fetch(`http://127.0.0.1:8000/task_status/${taskId}`);
+    // const response = await fetch(`http://127.0.0.1:8000/task_status/${taskId}`);
     // const response = await fetch(`https://13.60.179.94/task_status/${taskId}`);
-    // const response = await fetch(`https://fireflies.radioactive11.com/task_status/${taskId}`);
+    const response = await fetch(`https://fireflies.radioactive11.com/task_status/${taskId}`);
     const data = await response.json();
     if(data.state === 'PENDING'){
       return 'PENDING';
@@ -409,10 +409,10 @@
       };
 
       fetch(
-        // "https://fireflies.radioactive11.com/create-apple-music-playlist", //Domain
+         "https://fireflies.radioactive11.com/create-apple-music-playlist", //Domain
         // "https://13.60.179.94/create-apple-music-playlist", //AWS
         // "https://fireflies-0rmt.onrender.com/create-apple-music-playlist", //render
-        "http://127.0.0.1:8000/create-apple-music-playlist",
+        //"http://127.0.0.1:8000/create-apple-music-playlist",
         requestOptions
       )
       .then((response) => {
